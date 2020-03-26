@@ -30,5 +30,7 @@ urlpatterns = [
     path('author/create', AuthorEdit.as_view(), name='author_create'),
     path('author/create_many', author_create_many, name='author_create_many'),
     path('author_book/create_many', author_create_many, name='author_book_create_many'),
+    path('friends/', views.FriendList.as_view(), name='friend_list'),
+    path('friends/create', views.FriendCreate.as_view(), name='friend_create'),
 ]
 app_name = 'p_library'

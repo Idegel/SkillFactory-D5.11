@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from p_library.models import Book, Editor
+from p_library.models import Book, Editor, Friend
 from django.http import HttpResponse
 from django.template import loader
 from p_library.models import Author  
-from p_library.forms import AuthorForm
+from p_library.forms import AuthorForm, BookForm, FriendForm
 from django.views.generic import CreateView, ListView
 from django.urls import reverse_lazy
 from django.forms import formset_factory  
@@ -74,6 +74,16 @@ class AuthorList(ListView):
     model = Author  
     template_name = 'authors_list.html'
 
+class FriendCreate(CreateView):
+    model = Friend
+    form_class = FriendForm
+    success_url = reverse_lazy('p_library:friend_list')
+    template_name = 'friend_edit.html'
+
+class FriendList(ListView):
+    model = Friend
+    template_name = 'friend_list.html'
+
 def author_create_many(request):  
     AuthorFormSet = formset_factory(AuthorForm, extra=2)  #  Первым делом, получим класс, который будет создавать наши формы. Обратите внимание на параметр `extra`, в данном случае он равен двум, это значит, что на странице с несколькими формами изначально будет появляться 2 формы создания авторов.
     if request.method == 'POST':  #  Наш обработчик будет обрабатывать и GET и POST запросы. POST запрос будет содержать в себе уже заполненные данные формы
@@ -109,3 +119,47 @@ def books_authors_create_many(request):
 			'book_formset': book_formset,  
 		}  
 	)
+
+def borrowed_book(request):
+    if request.method == 'POST':
+        book_id = request.POST['id']
+        friend_id = request.POST['select_borrowed']
+        if not book_id:
+            return redirect('/index/')
+        else:
+            book = Book.objects.filter(id=book_id).first()
+            friend = Friend.objects.get(id=friend_id)
+            if not book:
+                return redirect('/index/')
+            if book.copy_count < 1:
+                book.copy_count = 0
+            else:
+                book.copy_count -= 1
+                book.borrowed_book_count += 1
+                book.friend.add(friend)
+            book.save()
+        return redirect('/index/')
+    else:
+        return redirect('/index/')
+
+def returned_book(request):
+    if request.method == 'POST':
+        book_id = request.POST['id']
+        friend_id = request.POST['select_returned']
+        if not book_id:
+            return redirect('/index/')
+        else:
+            book = Book.objects.filter(id=book_id).first()
+            friend = Friend.objects.get(id=friend_id)
+            if not book:
+                return redirect('/index/')
+            if book.borrowed_book_count < 1:
+                book.borrowed_book_count = 0
+            else:
+                book.copy_count += 1
+                book.borrowed_book_count -= 1
+                book.friend.remove(friend)
+            book.save()
+        return redirect('/index/')
+    else:
+        return redirect('/index/')

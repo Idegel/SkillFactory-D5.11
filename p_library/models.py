@@ -9,7 +9,7 @@ class Author(models.Model):
     country = models.CharField(max_length=2)
 
     def __str__(self):  
-        return self.full_name
+        return "{},{}".format(self.full_name,self.birth_year)
 
 class Book(models.Model):  
     ISBN = models.CharField(max_length=13)  
@@ -20,6 +20,7 @@ class Book(models.Model):
     copy_count = models.SmallIntegerField()
     price = models.DecimalField(max_digits=15, decimal_places=2)
     editor = models.ForeignKey('Editor', on_delete=models.CASCADE,null=True,blank=True,related_name='books')
+    friend = models.ForeignKey('Friend', on_delete=models.CASCADE,null=True,blank=True)
 
     def __str__(self):
         return self.title
@@ -29,3 +30,9 @@ class Editor(models.Model):
 
     def __str__(self):
         return self.name
+
+class Friend(models.Model):
+    full_name = models.TextField()
+    
+    def __str__(self):
+        return self.full_name
